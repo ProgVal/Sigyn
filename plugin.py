@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 #
 # -*- coding: utf-8 -*-
 
@@ -167,7 +167,7 @@ def prefixToMask (irc,prefix):
     return cache[prefix]
 
 def compareString (a,b):
-    # return 0 to 1 float percent of similarity ( 0.85 seems to be a good average )
+    """return 0 to 1 float percent of similarity ( 0.85 seems to be a good average )"""
     if a == b:
         return 1
     sa, sb = set(a), set(b)
@@ -178,7 +178,9 @@ def compareString (a,b):
     return jacc
 
 def largestString (s1,s2):
-    # returns largest pattern available in 2 strings
+    """returns largest pattern available in 2 strings"""
+    # Source: https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Longest_common_substring#Python2
+    # (CC BY-SA license)
     m = [[0] * (1 + len(s2)) for i in xrange(1 + len(s1))]
     longest, x_longest = 0, 0
     for x in xrange(1, 1 + len(s1)):
@@ -606,8 +608,8 @@ class Sigyn(callbacks.Plugin,plugins.ChannelDBHandler):
             elif chan.patterns.timeout != life:
                 chan.patterns.setTimeout(life)
             chan.patterns.enqueue(text)
-            self.logChannel(irc,'PATTERN: [%s] added tmp "%s" for %ss by %s' % (channel,text,life,msg.nick))
             irc.replySuccess()
+            self.logChannel(irc,'PATTERN: [%s] added tmp "%s" for %ss by %s' % (channel,text,life,msg.nick))
         else:
             irc.reply('unknown channel')
     addtmp = wrap(addtmp,['op','text'])
@@ -765,7 +767,7 @@ class Sigyn(callbacks.Plugin,plugins.ChannelDBHandler):
         if not kind in i.queues[key]:
             i.queues[key][kind] = utils.structures.TimeoutQueue(life)
         elif i.queues[key][kind].timeout != life:
-            i.queues[key][kind].setTimeout(life)
+            queue.setTimeout(life)
         return i.queues[key][kind]
 
     def rmIrcQueueFor (self,irc,key):
@@ -1879,7 +1881,7 @@ class Sigyn(callbacks.Plugin,plugins.ChannelDBHandler):
             for channel in channels:
                 if ircutils.isChannel(channel) and channel in irc.state.channels:
                     if channel in i.channels:
-                        del i.channels[channel]
+                        self.clearChan(irc,channel)
             return
         mask = prefixToMask(irc,msg.prefix)
         isBanned = False
@@ -1927,7 +1929,7 @@ class Sigyn(callbacks.Plugin,plugins.ChannelDBHandler):
         i = self.getIrc(irc)
         if target == irc.nick:
             if channel in i.channels:
-                del i.channels[channel]
+                self.clearChan(irc,channel)
         else:
             def rm ():
                 self.rmNick(irc,target)
